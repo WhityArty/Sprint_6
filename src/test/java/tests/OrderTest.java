@@ -46,6 +46,9 @@ public class OrderTest extends BaseTest {
                                          String date, String period, String color,
                                          String comment) {
 
+        String browser = isChrome() ? "Chrome" : "Firefox";
+        System.out.println("Браузер: " + browser);
+
         MainPage mainPage = new MainPage(driver);
         OrderPage orderPage = new OrderPage(driver);
 
@@ -70,20 +73,24 @@ public class OrderTest extends BaseTest {
         // Проверяем успешное оформление
         boolean success = orderPage.isSuccessMessageDisplayed();
 
-        if (isChrome()) {
-            // В Chrome ожидаем известный баг
-            System.out.println("Браузер: Chrome");
-            if (success) {
-                System.out.println("НЕОЖИДАННО: Заказ успешно оформлен в Chrome");
-                assertTrue(success, "Сообщение об успешном заказе должно отображаться");
-            } else {
-                System.out.println("ОЖИДАЕМО: В Chrome обнаружен известный баг - заказ не оформляется");
-                // Не падаем, так как это известная проблема
-            }
+        try {
+            // Единая проверка для всех браузеров
+            assertTrue(success, "Заказ не был оформлен успешно. Сообщение об успешном оформлении не появилось.");
+            System.out.println("ТЕСТ ПРОЙДЕН: Заказ успешно оформлен в " + browser);
+
+        } catch (AssertionError e) {
+            // Детализируем ошибку с информацией о браузере
+            String errorDetails = getErrorDetails(browser);
+            System.out.println("ТЕСТ НЕ ПРОЙДЕН: " + errorDetails);
+            throw e;
+        }
+    }
+
+    private String getErrorDetails(String browser) {
+        if ("Chrome".equals(browser)) {
+            return "В Chrome обнаружен баг: невозможно оформить заказ";
         } else {
-            // В Firefox тест должен проходить
-            System.out.println("Браузер: Firefox");
-            assertTrue(success, "Сообщение об успешном заказе должно отображаться в Firefox");
+            return "В Firefox заказ не оформляется";
         }
     }
 }
